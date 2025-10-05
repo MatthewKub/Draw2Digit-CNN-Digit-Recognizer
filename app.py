@@ -1,10 +1,13 @@
+import os
 from flask import Flask, request, jsonify, render_template
 from PIL import Image, ImageOps, ImageFilter
 import torch
 import torchvision.transforms as transforms
 from CNNmodel import CNNModel
 
-app = Flask(__name__)
+# Explicit template path
+app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), 'templates'))
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = CNNModel().to(device)
@@ -25,18 +28,10 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     file = request.files['file']
-    image = Image.open(file).convert('L')
+    image = Image.open(file).convert('L')  # Already white-on-black
 
-    # Invert to match MNIST
-    image = ImageOps.invert(image)
-
-    # Enhance contrast slightly
-    image = image.filter(ImageFilter.SHARPEN)
-
-    # Resize and center
+    # Resize and normalize
     image = image.resize((28, 28))
-
-    # Apply transforms
     image = transform(image).unsqueeze(0).to(device)
 
     with torch.no_grad():
