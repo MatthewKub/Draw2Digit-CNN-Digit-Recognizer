@@ -43,33 +43,37 @@ model = CNNModel().to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # Training (3 epochs)
-for epoch in range(4):
-    model.train()
-    for data, target in train_loader:
-        data, target = data.to(device), target.to(device)
-        optimizer.zero_grad()
-        output = model(data)
-        loss = F.nll_loss(output, target)
-        loss.backward()
-        optimizer.step()
-    print(f"Epoch {epoch+1}: Loss = {loss.item():.4f}")
+if __name__ == "__main__":
+    # This will allow for training only when running this file directly
+    for epoch in range(4):
+        model.train()
+        for data, target in train_loader:
+            data, target = data.to(device), target.to(device)
+            optimizer.zero_grad()
+            output = model(data)
+            loss = F.nll_loss(output, target)
+            loss.backward()
+            optimizer.step()
+        print(f"Epoch {epoch+1}: Loss = {loss.item():.4f}")
 
-# Overfitting Check 
-model.eval()
-test_loss = 0
-correct = 0
+    torch.save(model.state_dict(), "model.pth")
 
-with torch.no_grad():
-    for data, target in test_loader:
-        data, target = data.to(device), target.to(device)
-        output = model(data)
-        test_loss += F.nll_loss(output, target, reduction='sum').item()
-        pred = output.argmax(dim=1, keepdim=True)
-        correct += pred.eq(target.view_as(pred)).sum().item()
+    # Overfitting Check 
+    model.eval()
+    test_loss = 0
+    correct = 0
 
-test_loss /= len(test_loader.dataset)
-accuracy = 100. * correct / len(test_loader.dataset)
-print(f'\nTest set: Average loss: {test_loss:.4f}, Accuracy: {accuracy:.2f}%\n')
+    with torch.no_grad():
+        for data, target in test_loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            test_loss += F.nll_loss(output, target, reduction='sum').item()
+            pred = output.argmax(dim=1, keepdim=True)
+            correct += pred.eq(target.view_as(pred)).sum().item()
 
-# Saving Model (For future reference)
-torch.save(model.state_dict(), 'model.pth')
+    test_loss /= len(test_loader.dataset)
+    accuracy = 100. * correct / len(test_loader.dataset)
+    print(f'\nTest set: Average loss: {test_loss:.4f}, Accuracy: {accuracy:.2f}%\n')
+
+    # Saving Model (For future reference)
+    torch.save(model.state_dict(), 'model.pth')

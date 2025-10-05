@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Draw2Digit</title>
+</head>
+<body>
+  <h1>Handwritten Digit Recognizer</h1>
+
+  <canvas id="canvas" width="200" height="200" style="border:1px solid black;"></canvas><br>
+  <button onclick="clearCanvas()">Clear</button>
+  <button onclick="submitCanvas()">Submit</button>
+  <p id="result"></p>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+
+    canvas.addEventListener('mousedown', () => drawing = true);
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mousemove', e => {
+      if (!drawing) return;
+      ctx.fillStyle = 'black';
+      ctx.beginPath();
+      ctx.arc(e.offsetX, e.offsetY, 8, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    async function submitCanvas() {
+      const blob = await new Promise(r => canvas.toBlob(r));
+      const formData = new FormData();
+      formData.append('file', blob, 'canvas.png');
+
+      const res = await fetch('/predict', { method: 'POST', body: formData });
+      const data = await res.json();
+      document.getElementById('result').innerText = "Prediction: " + data.prediction;
+    }
+  </script>
+</body>
+</html>
