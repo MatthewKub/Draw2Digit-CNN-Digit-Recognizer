@@ -10,6 +10,9 @@ app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), 't
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = CNNModel().to(device)
+model_path = os.path.join(os.path.dirname(__file__), "model.pth")
+if not os.path.exists(model_path):
+    raise FileNotFoundError("model.pth not found! Please run CNNmodel.py first to train the model.")
 model.load_state_dict(torch.load("model.pth", map_location=device))
 model.eval()
 
